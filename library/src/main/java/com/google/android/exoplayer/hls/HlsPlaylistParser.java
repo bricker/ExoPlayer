@@ -252,6 +252,7 @@ public final class HlsPlaylistParser implements UriLoadable.Parser<HlsPlaylist> 
     int segmentByterangeOffset = 0;
     int segmentByterangeLength = C.LENGTH_UNBOUNDED;
     int segmentMediaSequence = 0;
+    Date segmentProgramDateTime = null;
     Date programDateTime = null;
     boolean isEncrypted = false;
     String encryptionKeyUri = null;
@@ -288,18 +289,21 @@ public final class HlsPlaylistParser implements UriLoadable.Parser<HlsPlaylist> 
         if (splitByteRange.length > 1) {
           segmentByterangeOffset = Integer.parseInt(splitByteRange[1]);
         }
-      } else if (line.startsWith(PROGRAM_DATE_TIME_TAG) && programDateTime == null) {
-         String programDateTimeStr = HlsParserUtil.parseStringAttr(line, PROGRAM_DATE_TIME_REGEX, PROGRAM_DATE_TIME_TAG);
-          // TODO: Need to handle the Timezone & fractional part too
-        // Currently, either the playlist is assumed to always have timezone, or
-        // never have timezone. If this assumption fails, live DVR functionality will be broken.
-        SimpleDateFormat ISO8601Datefmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-        ISO8601Datefmt.setTimeZone(TimeZone.getTimeZone("UTC"));
+      } else if (line.startsWith(PROGRAM_DATE_TIME_TAG)) {
+        String programDateTimeStr = HlsParserUtil.parseStringAttr(line, PROGRAM_DATE_TIME_REGEX, PROGRAM_DATE_TIME_TAG);
+        // kpcc: "2016-04-03T08:53:20.934-07:00"
+        SimpleDateFormat dateFmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ");
         try {
-          programDateTime = ISO8601Datefmt.parse(programDateTimeStr);
+          segmentProgramDateTime = dateFmt.parse(programDateTimeStr);
         } catch (Exception e) {
           Log.e("HLS", "Error in parsing program date " + programDateTimeStr, e);
         }
+
+        if (programDateTime == null) {
+          // [bcr] This is to retain the original functionality of https://github.com/google/ExoPlayer/pull/1394
+          programDateTime = (Date) segmentProgramDateTime.clone();
+        }
+
       } else if (line.startsWith(DISCONTINUITY_SEQUENCE_TAG)) {
         discontinuitySequenceNumber = Integer.parseInt(line.substring(line.indexOf(':') + 1));
       } else if (line.equals(DISCONTINUITY_TAG)) {
@@ -319,7 +323,7 @@ public final class HlsPlaylistParser implements UriLoadable.Parser<HlsPlaylist> 
         }
         segments.add(new Segment(line, segmentDurationSecs, discontinuitySequenceNumber,
             segmentStartTimeUs, isEncrypted, encryptionKeyUri, segmentEncryptionIV,
-            segmentByterangeOffset, segmentByterangeLength));
+            segmentByterangeOffset, segmentByterangeLength, segmentProgramDateTime));
         segmentStartTimeUs += (long) (segmentDurationSecs * C.MICROS_PER_SECOND);
         segmentDurationSecs = 0.0;
         if (segmentByterangeLength != C.LENGTH_UNBOUNDED) {

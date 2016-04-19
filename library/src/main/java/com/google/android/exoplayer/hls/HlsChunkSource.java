@@ -69,6 +69,7 @@ public class HlsChunkSource implements HlsTrackSelector.Output {
      * @param availableRange The range which specifies available content that can be seeked to.
      */
     public void onAvailableRangeChanged(int sourceId, TimeRange availableRange);
+    public void onChunkLoaded(HlsMediaPlaylist.Segment segment);
   }
 
   /**
@@ -247,6 +248,7 @@ public class HlsChunkSource implements HlsTrackSelector.Output {
     this.eventHandler = eventHandler;
     this.eventListener = eventListener;
     this.eventSourceId = eventSourceId;
+
     isMediaTimeBaseSet = false;
     availableRangeBoundsUs = new long[2];
     baseUri = playlist.baseUri;
@@ -587,6 +589,7 @@ public class HlsChunkSource implements HlsTrackSelector.Output {
       extractorWrapper = previousTsChunk.extractorWrapper;
     }
 
+    eventListener.onChunkLoaded(segment);
     out.chunk = new TsChunk(dataSource, dataSpec, trigger, format, startTimeUs, endTimeUs,
         chunkMediaSequence, segment.discontinuitySequenceNumber, extractorWrapper, encryptionKey,
         encryptionIv);
