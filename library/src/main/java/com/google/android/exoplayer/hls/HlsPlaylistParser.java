@@ -31,6 +31,7 @@ import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -293,8 +294,8 @@ public final class HlsPlaylistParser implements UriLoadable.Parser<HlsPlaylist> 
           // TODO: Need to handle the Timezone & fractional part too
         // Currently, either the playlist is assumed to always have timezone, or
         // never have timezone. If this assumption fails, live DVR functionality will be broken.
-        SimpleDateFormat ISO8601Datefmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-        ISO8601Datefmt.setTimeZone(TimeZone.getTimeZone("UTC"));
+        SimpleDateFormat ISO8601Datefmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ", Locale.US);
+//        ISO8601Datefmt.setTimeZone(TimeZone.getTimeZone("UTC"));
         try {
           programDateTime = ISO8601Datefmt.parse(programDateTimeStr);
         } catch (Exception e) {
