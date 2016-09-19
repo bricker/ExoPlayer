@@ -733,7 +733,7 @@ public class HlsChunkSource implements HlsTrackSelector.Output {
         || (idealIndex > selectedVariantIndex && bufferedUs < maxBufferDurationToSwitchDownUs)
         || (idealIndex < selectedVariantIndex && bufferedUs > minBufferDurationToSwitchUpUs)) {
       // Switch variant.
-      return idealIndex;
+//      return idealIndex;
     }
     // Stick with the current variant for now.
     return selectedVariantIndex;
